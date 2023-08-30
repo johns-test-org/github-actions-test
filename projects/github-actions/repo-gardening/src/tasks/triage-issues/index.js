@@ -188,6 +188,12 @@ async function triageIssues( payload, octokit ) {
 	// ID of the board used to triage block-related issues.
 	const projectId = 1;
 
+	if ( projectId ) {
+		debug(
+			`is-on-board: Issue #${ number } is in project #${ blockProjectId }`
+		);
+	}
+
 	// Find Priority.
 	const priorityLabels = await hasPriorityLabels(
 		octokit,
