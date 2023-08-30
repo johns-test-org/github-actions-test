@@ -23,10 +23,6 @@ const automations = [
 		task: ifNotFork( assignIssues ),
 	},
 	{
-		event: 'push',
-		task: addMilestone,
-	},
-	{
 		event: 'pull_request_target',
 		action: [ 'opened', 'reopened', 'synchronize', 'edited', 'labeled' ],
 		task: ifNotClosed( addLabels ),
@@ -56,10 +52,6 @@ const automations = [
 		event: 'pull_request_target',
 		action: [ 'labeled' ],
 		task: ifNotClosed( notifyEditorial ),
-	},
-	{
-		event: 'push',
-		task: wpcomCommitReminder,
 	},
 	{
 		event: 'pull_request_target',
