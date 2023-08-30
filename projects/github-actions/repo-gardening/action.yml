@@ -9,7 +9,7 @@ inputs:
     required: true
     default: ${{ github.token }}
   project_automation_token:
-    description: "Token for accessing projects."
+    description: "Personal access token (with repo and project scopes) for the Project Automation task"
     required: false
     default: ""
   add_labels:

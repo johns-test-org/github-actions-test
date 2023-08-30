@@ -190,7 +190,7 @@ async function triageIssues( payload, octokit ) {
 
 	if ( projectId ) {
 		debug(
-			`is-on-board: Issue #${ number } is in project #${ blockProjectId }`
+			`is-on-board: Issue #${ number } is in project #${ projectId }`
 		);
 	}
 
