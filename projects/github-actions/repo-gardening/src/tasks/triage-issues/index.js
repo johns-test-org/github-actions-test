@@ -177,6 +177,17 @@ async function triageIssues( payload, octokit ) {
 	const { owner, name, full_name } = repository;
 	const ownerLogin = owner.login;
 
+	const projectToken = getInput( 'project_automation_token' );
+	if ( ! projectToken ) {
+		setFailed(
+			`add-issue-to-board: Input project_automation_token is required but missing. Aborting.`
+		);
+		return;
+	}
+
+	// ID of the board used to triage block-related issues.
+	const projectId = 1;
+
 	// Find Priority.
 	const priorityLabels = await hasPriorityLabels(
 		octokit,

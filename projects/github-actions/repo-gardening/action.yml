@@ -8,7 +8,7 @@ inputs:
     description: "GitHub access token"
     required: true
     default: ${{ github.token }}
-  project_token:
+  project_automation_token:
     description: "Token for accessing projects."
     required: false
     default: ""
