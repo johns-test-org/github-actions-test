@@ -71,7 +71,8 @@ jobs:
         env:
           PR_WORKSPACE: ${{ github.workspace }}${{ github.event_name == 'pull_request_target' && '/pr-checkout' || '' }}
         with:
-          # github_token: ${{ secrets.PROJECT_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          project_token: ${{ secrets.PROJECT_TOKEN }}
           slack_token: ${{ secrets.SLACK_TOKEN }}
           slack_team_channel: ${{ secrets.SLACK_TEAM_CHANNEL }}
           slack_design_channel: ${{ secrets.SLACK_DESIGN_CHANNEL }}
