@@ -195,7 +195,11 @@ async function triageIssues( payload, octokit ) {
 		);
 
 
-		const projectBoardLink = 'https://github.com/orgs/johns-test-org/projects/11/'
+		const projectBoardLink = getInput( 'project_board' );
+		if ( ! projectBoardLink ) {
+			setFailed( 'Triage: No project board link provided. Cannot triage to a board' );
+			return;
+		}
 
 		// Let's create a new octokit instance using our own custom token.
 		// eslint-disable-next-line new-cap
@@ -217,6 +221,10 @@ async function triageIssues( payload, octokit ) {
 			ownerName,
 			projectNumber: parseInt( projectNumber, 10 ),
 		};
+
+		debug(
+			`is-on-board: Owner type: ${ projectInfo.ownerType }, owner name: ${ projectInfo.ownerName }, project number: ${ projectInfo.projectNumber }`
+		);
 
 		// First, use the GraphQL API to request the project's node ID,
 		// as well as info about the first 20 fields for that project.
