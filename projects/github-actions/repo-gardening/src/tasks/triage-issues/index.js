@@ -1,4 +1,5 @@
 const { getInput, setFailed } = require( '@actions/core' );
+const { getOctokit } = require( '@actions/github' );
 const debug = require( '../../utils/debug' );
 const getLabels = require( '../../utils/get-labels' );
 
@@ -173,7 +174,7 @@ function findPriority( body ) {
  */
 async function triageIssues( payload, octokit ) {
 	const { action, issue, label = {}, repository } = payload;
-	const { number, body, state } = issue;
+	const { number, body, projectV2, state } = issue;
 	const { owner, name, full_name } = repository;
 	const ownerLogin = owner.login;
 
@@ -187,7 +188,6 @@ async function triageIssues( payload, octokit ) {
 
 	// ID of the board used to triage block-related issues.
 	const projectId = 1;
-	const issueId = 1;
 
 	if ( projectId ) {
 		debug(
@@ -232,7 +232,7 @@ async function triageIssues( payload, octokit ) {
 				}
 			  }`,
 			{
-				id: issueId
+				id: number
 			}
 		);
 
