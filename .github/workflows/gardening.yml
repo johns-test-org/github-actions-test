@@ -70,6 +70,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           project_automation_token: ${{ secrets.PROJECT_AUTOMATION_TOKEN }}
+          project_board: https://github.com/orgs/johns-test-org/projects/11/
           slack_token: ${{ secrets.SLACK_TOKEN }}
           slack_team_channel: ${{ secrets.SLACK_TEAM_CHANNEL }}
           slack_design_channel: ${{ secrets.SLACK_DESIGN_CHANNEL }}

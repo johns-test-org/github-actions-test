@@ -12,6 +12,10 @@ inputs:
     description: "Personal access token (with repo and project scopes) for the Project Automation task"
     required: false
     default: ""
+  project_board:
+    description: "Project board URL"
+    required: false
+    default: ""
   add_labels:
     description: 'Labels and paths to match from a workflow.'
     required: false

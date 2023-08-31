@@ -187,10 +187,57 @@ async function triageIssues( payload, octokit ) {
 
 	// ID of the board used to triage block-related issues.
 	const projectId = 1;
+	const issueId = 1;
 
 	if ( projectId ) {
 		debug(
 			`is-on-board: Issue #${ number } is in project #${ projectId }`
+		);
+
+		// const projectBoardLink = getInput( 'project_board' );
+		// if ( ! projectBoardLink ) {
+		// 	setFailed( 'Triage: No project board link provided. Cannot triage to a board' );
+		// 	return;
+		// }
+
+		// // Get details about our project board, to use in our requests.
+		// const projectInfo = await getProjectDetails( octokit, projectBoardLink );
+		// if ( Object.keys( projectInfo ).length === 0 || ! projectInfo.projectNodeId ) {
+		// 	setFailed( 'Triage: we cannot fetch info about our project board. Cannot triage to a board' );
+		// 	return;
+		// }
+
+		// Let's create a new octokit instance using our own custom token.
+		// eslint-disable-next-line new-cap
+		const projectOctokit = new getOctokit( projectToken );
+
+		const projectDetails = await projectOctokit.graphql(
+			`query getProjectNumber($id: ID!){
+				node(id: $id) {
+				... on Issue {
+					projectItems(first: 10) {
+					  ... on ProjectV2ItemConnection {
+						nodes {
+						  ... on ProjectV2Item {
+							project {
+							  ... on ProjectV2 {
+								number
+							  }
+							}
+						  }
+						}
+					  }
+					}
+				  }
+				}
+			  }`,
+			{
+				id: issueId
+			}
+		);
+
+		debug(
+			`is-on-board: Project details: ${ projectId }`
 		);
 	}
 
