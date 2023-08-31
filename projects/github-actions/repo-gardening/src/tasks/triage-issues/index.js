@@ -228,55 +228,55 @@ async function triageIssues( payload, octokit ) {
 
 		// First, use the GraphQL API to request the project's node ID,
 		// as well as info about the first 20 fields for that project.
-		const projectDetails = await octokit.graphql(
-			`query getProject($ownerName: String!, $projectNumber: Int!) {
-				${ projectInfo.ownerType }(login: $ownerName) {
-					projectV2(number: $projectNumber) {
-						id
-						fields(first:20) {
-							nodes {
-								... on ProjectV2Field {
-									id
-									name
-								}
-								... on ProjectV2SingleSelectField {
-									id
-									name
-									options {
-										id
-										name
-									}
-								}
-							}
-						}
-					}
-				}
-			}`,
-			{
-				ownerName: projectInfo.ownerName,
-				projectNumber: projectInfo.projectNumber,
-			}
-		);
+		// const projectDetails = await octokit.graphql(
+		// 	`query getProject($ownerName: String!, $projectNumber: Int!) {
+		// 		${ projectInfo.ownerType }(login: $ownerName) {
+		// 			projectV2(number: $projectNumber) {
+		// 				id
+		// 				fields(first:20) {
+		// 					nodes {
+		// 						... on ProjectV2Field {
+		// 							id
+		// 							name
+		// 						}
+		// 						... on ProjectV2SingleSelectField {
+		// 							id
+		// 							name
+		// 							options {
+		// 								id
+		// 								name
+		// 							}
+		// 						}
+		// 					}
+		// 				}
+		// 			}
+		// 		}
+		// 	}`,
+		// 	{
+		// 		ownerName: projectInfo.ownerName,
+		// 		projectNumber: projectInfo.projectNumber,
+		// 	}
+		// );
 
-		// Extract the project node ID.
-		const projectNodeId = projectDetails[ projectInfo.ownerType ]?.projectV2.id;
-		if ( projectNodeId ) {
-			projectInfo.projectNodeId = projectNodeId; // Project board node ID. String.
-			debug(
-				`is-on-board: ${ projectNodeId } is the project node id`
-			);
-		}
+		// // Extract the project node ID.
+		// const projectNodeId = projectDetails[ projectInfo.ownerType ]?.projectV2.id;
+		// if ( projectNodeId ) {
+		// 	projectInfo.projectNodeId = projectNodeId; // Project board node ID. String.
+		// 	debug(
+		// 		`is-on-board: ${ projectNodeId } is the project node id`
+		// 	);
+		// }
 
-		// Extract the ID of the Status field.
-		const priorityField = projectDetails[ projectInfo.ownerType ]?.projectV2.fields.nodes.find(
-			field => field.name === 'Priority'
-		);
-		if ( priorityField ) {
-			projectInfo.priority = priorityField; // Info about our priority column (id as well as possible values).
-			debug(
-				`is-on-board: ${ priorityField } is a field in the project`
-			);
-		}
+		// // Extract the ID of the Status field.
+		// const priorityField = projectDetails[ projectInfo.ownerType ]?.projectV2.fields.nodes.find(
+		// 	field => field.name === 'Priority'
+		// );
+		// if ( priorityField ) {
+		// 	projectInfo.priority = priorityField; // Info about our priority column (id as well as possible values).
+		// 	debug(
+		// 		`is-on-board: ${ priorityField } is a field in the project`
+		// 	);
+		// }
 
 		const isInProject = await projectOctokit.graphql(
 			`query getProjectNumber($id: ID!){
