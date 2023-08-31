@@ -187,11 +187,11 @@ async function triageIssues( payload, octokit ) {
 	}
 
 	// ID of the board used to triage block-related issues.
-	const projectId = 1;
+	// const projectNumber = 1;
 
-	if ( projectId ) {
+
 		debug(
-			`is-on-board: Issue #${ number } is in project #${ projectId }`
+			`is-on-board: Issue #${ number } is in project`
 		);
 
 
@@ -200,13 +200,13 @@ async function triageIssues( payload, octokit ) {
 		const projectOctokit = new getOctokit( projectToken );
 
 		const {
-			groups: { ownerType, ownerName, projectId },
+			groups: { ownerType, ownerName, projectNumber },
 		} = matches;
 	
 		const projectInfo = {
 			ownerType: ownerType === 'orgs' ? 'organization' : 'user', // GitHub API requests require 'organization' or 'user'.
 			ownerName,
-			projectNumber: parseInt( projectNumber, 10 ),
+			projectNumber: 1,
 		};
 
 		// First, use the GraphQL API to request the project's node ID,
@@ -245,6 +245,9 @@ async function triageIssues( payload, octokit ) {
 		const projectNodeId = projectDetails[ projectInfo.ownerType ]?.projectV2.id;
 		if ( projectNodeId ) {
 			projectInfo.projectNodeId = projectNodeId; // Project board node ID. String.
+			debug(
+				`is-on-board: ${ projectNodeId } is the project node id`
+			);
 		}
 
 		// Extract the ID of the Status field.
@@ -253,9 +256,12 @@ async function triageIssues( payload, octokit ) {
 		);
 		if ( priorityField ) {
 			projectInfo.priority = priorityField; // Info about our priority column (id as well as possible values).
+			debug(
+				`is-on-board: ${ priorityField } is a field in the project`
+			);
 		}
 
-		const projectNumber = await projectOctokit.graphql(
+		const isInProject = await projectOctokit.graphql(
 			`query getProjectNumber($id: ID!){
 				node(id: $id) {
 				... on Issue {
@@ -281,12 +287,12 @@ async function triageIssues( payload, octokit ) {
 		);
 
 		debug(
-			`is-on-board: Project details: ${ projectNumber }`
+			`is-on-board: Project details: ${ isInProject }`
 		);
 		debug(
 			`is-on-board: Node id: ${ node_id }`
 		);
-	}
+	
 
 	// Find Priority.
 	const priorityLabels = await hasPriorityLabels(
