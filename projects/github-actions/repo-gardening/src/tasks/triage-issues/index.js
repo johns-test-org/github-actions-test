@@ -278,6 +278,25 @@ async function triageIssues( payload, octokit ) {
 		// 	);
 		// }
 
+		// Use the GraphQL API to request the project's details.
+		const projectDetails = await projectOctokit.graphql(
+			`query getProject($ownerName: String!, $projectNumber: Int!) {
+				organization(login: $ownerName) {
+					projectV2(number: $projectNumber) {
+						id
+					}
+				}
+			}`,
+			{
+				ownerName: ownerLogin,
+				projectNumber: projectInfo.projectNumber,
+			}
+		);
+
+		debug(
+			`is-on-board: Project details: ${ projectDetails.organization?.projectV2.id }`
+		);
+
 		const isInProject = await projectOctokit.graphql(
 			`query getProjectNumber($id: ID!){
 				node(id: $id) {
@@ -305,6 +324,9 @@ async function triageIssues( payload, octokit ) {
 
 		debug(
 			`is-on-board: Project details: ${ isInProject }`
+		);
+		debug(
+			`is-on-board: Project details: ${ isInProject.node }`
 		);
 		debug(
 			`is-on-board: Node id: ${ node_id }`
