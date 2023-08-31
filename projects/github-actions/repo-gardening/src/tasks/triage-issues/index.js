@@ -195,7 +195,7 @@ async function triageIssues( payload, octokit ) {
 		);
 
 
-		const projectBoardLink = 'https://github.com/orgs/Automattic/projects/391/'
+		const projectBoardLink = 'https://github.com/orgs/johns-test-org/projects/11/'
 
 		// Let's create a new octokit instance using our own custom token.
 		// eslint-disable-next-line new-cap
@@ -215,7 +215,7 @@ async function triageIssues( payload, octokit ) {
 		const projectInfo = {
 			ownerType: ownerType === 'orgs' ? 'organization' : 'user', // GitHub API requests require 'organization' or 'user'.
 			ownerName,
-			projectNumber: 1,
+			projectNumber: parseInt( projectNumber, 10 ),
 		};
 
 		// First, use the GraphQL API to request the project's node ID,
