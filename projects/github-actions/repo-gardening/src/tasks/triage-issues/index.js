@@ -174,7 +174,7 @@ function findPriority( body ) {
  */
 async function triageIssues( payload, octokit ) {
 	const { action, issue, label = {}, repository } = payload;
-	const { number, body, projectV2, state } = issue;
+	const { number, body, node_id, projectV2, state } = issue;
 	const { owner, name, full_name } = repository;
 	const ownerLogin = owner.login;
 
@@ -232,7 +232,7 @@ async function triageIssues( payload, octokit ) {
 				}
 			  }`,
 			{
-				id: number
+				id: node_id
 			}
 		);
 
