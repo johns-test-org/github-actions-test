@@ -195,9 +195,18 @@ async function triageIssues( payload, octokit ) {
 		);
 
 
+		const projectBoardLink = 'https://github.com/orgs/Automattic/projects/391/'
+
 		// Let's create a new octokit instance using our own custom token.
 		// eslint-disable-next-line new-cap
 		const projectOctokit = new getOctokit( projectToken );
+
+		const projectRegex = /^(?:https:\/\/)?github\.com\/(?<ownerType>orgs|users)\/(?<ownerName>[^/]+)\/projects\/(?<projectNumber>\d+)/;
+		const matches = projectBoardLink.match( projectRegex );
+		if ( ! matches ) {
+			debug( `Triage: Invalid project board link provided. Cannot triage to a board` );
+			return {};
+		}
 
 		const {
 			groups: { ownerType, ownerName, projectNumber },
