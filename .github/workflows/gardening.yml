@@ -39,6 +39,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Generate token
+        id: generate_token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.APP_PEM }} 
+
       - name: Setup tools
         uses: ./.github/actions/tool-setup
 
@@ -69,7 +76,7 @@ jobs:
           PR_WORKSPACE: ${{ github.workspace }}${{ github.event_name == 'pull_request_target' && '/pr-checkout' || '' }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          project_automation_token: ${{ secrets.PROJECT_AUTOMATION_TOKEN }}
+          project_automation_token: ${{ steps.generate_token.outputs.token }}
           project_board: https://github.com/orgs/johns-test-org/projects/11/
           slack_token: ${{ secrets.SLACK_TOKEN }}
           slack_team_channel: ${{ secrets.SLACK_TEAM_CHANNEL }}
