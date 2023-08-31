@@ -297,36 +297,53 @@ async function triageIssues( payload, octokit ) {
 			`is-on-board: Project details: ${ projectDetails.organization?.projectV2.id }`
 		);
 
+		// const isInProject = await projectOctokit.graphql(
+		// 	`query getProjectNumber($id: ID!){
+		// 		node(id: $id) {
+		// 		... on Issue {
+		// 			projectItems(first: 10) {
+		// 			  ... on ProjectV2ItemConnection {
+		// 				nodes {
+		// 				  ... on ProjectV2Item {
+		// 					project {
+		// 					  ... on ProjectV2 {
+		// 						number
+		// 					  }
+		// 					}
+		// 				  }
+		// 				}
+		// 			  }
+		// 			}
+		// 		  }
+		// 		}
+		// 	  }`,
+		// 	{
+		// 		id: node_id
+		// 	}
+		// );
+
 		const isInProject = await projectOctokit.graphql(
 			`query getProjectNumber($id: ID!){
 				node(id: $id) {
 				... on Issue {
-					projectItems(first: 10) {
-					  ... on ProjectV2ItemConnection {
-						nodes {
-						  ... on ProjectV2Item {
-							project {
-							  ... on ProjectV2 {
-								number
-							  }
-							}
-						  }
-						}
-					  }
+					projectV2(number: $number) {
+						id
+						number
 					}
 				  }
 				}
 			  }`,
 			{
-				id: node_id
+				id: node_id,
+				number: 11
 			}
 		);
 
 		debug(
-			`is-on-board: Project details: ${ isInProject }`
+			`is-on-board: Project details: ${ isInProject.node.projectV2.id }`
 		);
 		debug(
-			`is-on-board: Project details: ${ isInProject.node }`
+			`is-on-board: Project details: ${ isInProject.node.projectV2.number }`
 		);
 		debug(
 			`is-on-board: Node id: ${ node_id }`
