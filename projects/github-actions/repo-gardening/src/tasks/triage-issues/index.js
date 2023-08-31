@@ -323,7 +323,7 @@ async function triageIssues( payload, octokit ) {
 		// );
 
 		const isInProject = await projectOctokit.graphql(
-			`query getProjectNumber($id: ID!){
+			`query getProjectNumber($id: ID!, $number: Int!){
 				node(id: $id) {
 				... on Issue {
 					projectV2(number: $number) {
@@ -340,10 +340,10 @@ async function triageIssues( payload, octokit ) {
 		);
 
 		debug(
-			`is-on-board: Project details: ${ isInProject.node.projectV2.id }`
+			`is-on-board: Project details: ${ isInProject.node?.projectV2.id }`
 		);
 		debug(
-			`is-on-board: Project details: ${ isInProject.node.projectV2.number }`
+			`is-on-board: Project details: ${ isInProject.node?.projectV2.number }`
 		);
 		debug(
 			`is-on-board: Node id: ${ node_id }`
