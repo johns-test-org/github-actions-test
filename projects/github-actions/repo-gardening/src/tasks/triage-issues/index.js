@@ -379,8 +379,8 @@ async function triageIssues( payload, octokit ) {
 
 	// Add our PR to that project board.
 	const projectItemDetails = await octokit.graphql(
-		`mutation addIssueToProject($input: UpdateProjectV2ItemFieldValueInput!) {
-			updateProjectV2ItemFieldValue(input: $input) {
+		`mutation ($input: UpdateProjectV2ItemFieldValueInput!) {
+			update_priority: updateProjectV2ItemFieldValue(input: $input) {
 				projectV2Item {
 					id
 				}
