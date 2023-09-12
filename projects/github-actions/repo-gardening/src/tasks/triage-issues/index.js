@@ -286,6 +286,10 @@ async function triageIssues( payload, octokit ) {
 			);
 		}
 
+		debug(
+			`is-on-board: ${ projectDetails.organization.projectV2.fields } is before the node`
+		);
+
 		// Extract the ID of the Status field.
 		const priorityField = projectDetails.organization?.projectV2.fields.nodes.find(
 			field => field.name === 'Priority'
