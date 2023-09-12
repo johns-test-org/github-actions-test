@@ -264,6 +264,22 @@ async function triageIssues( payload, octokit ) {
 				organization(login: $ownerName) {
 					projectV2(number: $projectNumber) {
 						id
+						fields(first:20) {
+							nodes {
+								... on ProjectV2Field {
+									id
+									name
+								}
+								... on ProjectV2SingleSelectField {
+									id
+									name
+									options {
+										id
+										name
+									}
+								}
+							}
+						}
 					}
 				}
 			}`,
