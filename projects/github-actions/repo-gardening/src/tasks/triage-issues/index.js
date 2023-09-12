@@ -372,7 +372,7 @@ async function triageIssues( payload, octokit ) {
 		);
 
 
-
+		const priorityNodeId = projectInfo.priority.id;
 	
 
 	// Add our PR to that project board.
@@ -386,7 +386,7 @@ async function triageIssues( payload, octokit ) {
 		}`,
 		{
 			input: {
-				fieldId: projectInfo.priority.id,
+				fieldId: priorityNodeId,
 				itemId: node_id,
 				projectId: projectNodeId,
 				value: {
