@@ -342,6 +342,8 @@ async function triageIssues( payload, octokit ) {
 		// 	}
 		// );
 
+
+
 		const isInProject = await projectOctokit.graphql(
 			`query getProjectNumber($id: ID!, $number: Int!){
 				node(id: $id) {
@@ -370,6 +372,14 @@ async function triageIssues( payload, octokit ) {
 		);
 
 
+
+		const {
+			status: {
+				id: priorityFieldId, // ID of the status field.
+				options,
+			},
+		} = projectInfo;
+
 	// Add our PR to that project board.
 	const projectItemDetails = await octokit.graphql(
 		`mutation addIssueToProject($input: UpdateProjectV2ItemFieldValueInput!) {
@@ -381,7 +391,7 @@ async function triageIssues( payload, octokit ) {
 		}`,
 		{
 			input: {
-				fieldId: 57148362,
+				fieldId: priorityFieldId,
 				itemId: node_id,
 				projectId: projectNodeId,
 				value: {
