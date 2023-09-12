@@ -373,12 +373,7 @@ async function triageIssues( payload, octokit ) {
 
 
 
-		const {
-			status: {
-				id: priorityFieldId, // ID of the status field.
-				options,
-			},
-		} = projectInfo;
+	
 
 	// Add our PR to that project board.
 	const projectItemDetails = await octokit.graphql(
@@ -391,7 +386,7 @@ async function triageIssues( payload, octokit ) {
 		}`,
 		{
 			input: {
-				fieldId: priorityFieldId,
+				fieldId: projectInfo.priority.id,
 				itemId: node_id,
 				projectId: projectNodeId,
 				value: {
