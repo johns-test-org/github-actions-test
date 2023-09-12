@@ -373,7 +373,9 @@ async function triageIssues( payload, octokit ) {
 
 
 		const priorityNodeId = projectInfo.priority.id;
-	
+		debug(
+			`is-on-board: Priority node id: ${ priorityNodeId }, node id: ${ node_id }, project number: ${ projectNodeId }`
+		);
 
 	// Add our PR to that project board.
 	const projectItemDetails = await octokit.graphql(
@@ -390,13 +392,13 @@ async function triageIssues( payload, octokit ) {
 				itemId: node_id,
 				projectId: projectNodeId,
 				value: {
-					singleSelectOptionId: 'Low',
+					singleSelectOptionId: '5953f8c8',
 				},
 			},
 		}
 	);
 
-	const projectItemId = projectItemDetails.addProjectV2ItemById.item.id;
+	const projectItemId = projectItemDetails.updateProjectV2ItemFieldValue.projectV2Item.id;
 	if ( ! projectItemId ) {
 		debug( `Triage: Failed to add PR to project board.` );
 		return '';
