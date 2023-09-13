@@ -390,7 +390,7 @@ async function triageIssues( payload, octokit ) {
 			input: {
 				fieldId: 57148362,
 				itemId: node_id,
-				projectId: 11,
+				projectId: projectNodeId,
 				value: {
 					singleSelectOptionId: '5953f8c8',
 				},
