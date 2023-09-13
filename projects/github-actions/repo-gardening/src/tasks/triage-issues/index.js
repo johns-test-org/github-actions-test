@@ -388,9 +388,9 @@ async function triageIssues( payload, octokit ) {
 		}`,
 		{
 			input: {
-				fieldId: priorityNodeId,
+				fieldId: 57148362,
 				itemId: node_id,
-				projectId: projectNodeId,
+				projectId: 11,
 				value: {
 					singleSelectOptionId: '5953f8c8',
 				},
