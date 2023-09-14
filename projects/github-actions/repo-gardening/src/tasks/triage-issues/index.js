@@ -370,17 +370,22 @@ async function triageIssues( payload, octokit ) {
 		debug(
 			`is-on-board: Node id: ${ node_id }`
 		);
+		const {
+			priority: {
+				id: priorityFieldId, // ID of the status field.
+				options,
+			},
+		} = projectInfo;
 
-
-		const priorityNodeId = projectInfo.priority.id;
+		// const priorityNodeId = projectInfo.priority.id;
 		debug(
 			`is-on-board: Priority node id: ${ priorityNodeId }, node id: ${ node_id }, project number: ${ projectNodeId }`
 		);
 
 	// Add our PR to that project board.
 	const projectItemDetails = await octokit.graphql(
-		`mutation ($input: UpdateProjectV2ItemFieldValueInput!) {
-			update_priority: updateProjectV2ItemFieldValue(input: $input) {
+		`mutation ( $input: UpdateProjectV2ItemFieldValueInput! ) {
+			set_status: updateProjectV2ItemFieldValue( input: $input ) {
 				projectV2Item {
 					id
 				}
@@ -388,7 +393,7 @@ async function triageIssues( payload, octokit ) {
 		}`,
 		{
 			input: {
-				fieldId: 57148362,
+				fieldId: priorityFieldId,
 				itemId: node_id,
 				projectId: projectNodeId,
 				value: {
