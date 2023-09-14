@@ -174,7 +174,7 @@ function findPriority( body ) {
  */
 async function triageIssues( payload, octokit ) {
 	const { action, issue, label = {}, repository } = payload;
-	const { number, body, node_id, projectV2, state } = issue;
+
 	const { owner, name, full_name } = repository;
 	const ownerLogin = owner.login;
 
@@ -185,6 +185,10 @@ async function triageIssues( payload, octokit ) {
 		);
 		return;
 	}
+
+	const {
+		issue: { number, node_id },
+	} = payload;
 
 	// ID of the board used to triage block-related issues.
 	// const projectNumber = 1;
