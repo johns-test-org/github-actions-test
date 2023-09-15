@@ -361,6 +361,8 @@ async function triageIssues( payload, octokit ) {
 			}
 		);
 
+		const itemId = isInProject.node?.projectV2.id;
+
 		debug(
 			`is-on-board: Project details: ${ isInProject.node?.projectV2.id }`
 		);
@@ -394,7 +396,7 @@ async function triageIssues( payload, octokit ) {
 		{
 			input: {
 				fieldId: priorityFieldId,
-				itemId: node_id,
+				itemId: itemId,
 				projectId: projectNodeId,
 				value: {
 					singleSelectOptionId: '5953f8c8',
