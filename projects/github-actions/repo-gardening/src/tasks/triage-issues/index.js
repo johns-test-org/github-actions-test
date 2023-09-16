@@ -396,7 +396,7 @@ async function triageIssues( payload, octokit ) {
 		{
 			input: {
 				fieldId: priorityFieldId,
-				itemId: itemId,
+				itemId: 'PVTI_lADOCGvWfc4AUwHEzgI4tDo',
 				projectId: projectNodeId,
 				value: {
 					singleSelectOptionId: '5953f8c8',
