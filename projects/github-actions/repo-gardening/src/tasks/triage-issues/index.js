@@ -361,7 +361,37 @@ async function triageIssues( payload, octokit ) {
 			}
 		);
 
+		const issueProjectDetails = await projectOctokit.graphql(
+			`query getIssueProjectDetails($id: ID!, $number: Int!){
+				node(id: $id) {
+					... on Issue {
+						projectItems(first: 10) {
+						... on ProjectV2ItemConnection {
+							nodes {
+							content {
+							... on Issue {
+								id
+								projectItems(first: 10) {
+								nodes {
+									id
+								}
+								}
+							}
+							}
+							}
+						}
+						}
+					}
+					}
+			  }`,
+			{
+				id: node_id,
+				number: 11
+			}
+		);
+
 		const itemId = isInProject.node?.projectV2.id;
+		const itemNodeId = issueProjectDetails
 
 		debug(
 			`is-on-board: Project details: ${ isInProject.node?.projectV2.id }`
@@ -384,6 +414,19 @@ async function triageIssues( payload, octokit ) {
 			`is-on-board: Priority node id: ${ priorityFieldId }, node id: ${ node_id }, project number: ${ projectNodeId }`
 		);
 
+		const priorityText = 'Low';
+		// Find the ID of the status option that matches our PR status.
+		const priorityOptionId = options.find( option => option.name === priorityText ).id;
+		if ( ! priorityOptionId ) {
+			debug(
+				`Triage: Status ${ priorityText } does not exist as a column option in the project board.`
+			);
+			
+		}
+		debug(
+			`Triage: priority option id ${ priorityText }.`
+		);
+
 	// Add our PR to that project board.
 	const projectItemDetails = await projectOctokit.graphql(
 		`mutation ( $input: UpdateProjectV2ItemFieldValueInput! ) {
@@ -399,7 +442,7 @@ async function triageIssues( payload, octokit ) {
 				itemId: 'PVTI_lADOCGvWfc4AUwHEzgI4tDo',
 				projectId: projectNodeId,
 				value: {
-					singleSelectOptionId: '5953f8c8',
+					singleSelectOptionId: priorityOptionId,
 				},
 			},
 		}
