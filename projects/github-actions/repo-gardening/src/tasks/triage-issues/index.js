@@ -362,7 +362,7 @@ async function triageIssues( payload, octokit ) {
 		);
 
 		const issueProjectDetails = await projectOctokit.graphql(
-			`query getIssueProjectDetails($id: ID!, $number: Int!){
+			`query getIssueProjectDetails($id: ID!){
 				node(id: $id) {
 					... on Issue {
 						projectItems(first: 10) {
@@ -385,8 +385,7 @@ async function triageIssues( payload, octokit ) {
 					}
 			  }`,
 			{
-				id: node_id,
-				number: 11
+				id: node_id
 			}
 		);
 
