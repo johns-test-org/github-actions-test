@@ -393,6 +393,18 @@ async function triageIssues( payload, octokit ) {
 		const itemNodeId = issueProjectDetails
 
 		debug(
+			`is-on-board: projectItemId: ${ issueProjectDetails }`
+		);
+
+		debug(
+			`is-on-board: projectItemId2: ${ issueProjectDetails.node?.projectItems }`
+		);
+
+		debug(
+			`is-on-board: projectItemId3: ${ issueProjectDetails.node?.projectItems.nodes.content.projectItems.nodes.id }`
+		);
+
+		debug(
 			`is-on-board: Project details: ${ isInProject.node?.projectV2.id }`
 		);
 		debug(
