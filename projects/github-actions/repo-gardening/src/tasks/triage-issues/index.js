@@ -178,267 +178,195 @@ async function triageIssues( payload, octokit ) {
 	const { owner, name, full_name } = repository;
 	const ownerLogin = owner.login;
 
+	// Get the project automation token, which has special permissions to update GitHub projects.
+	// TODO: Have separate paths for regular token and project automation token.
 	const projectToken = getInput( 'project_automation_token' );
 	if ( ! projectToken ) {
 		setFailed(
-			`add-issue-to-board: Input project_automation_token is required but missing. Aborting.`
+			`triage-issues: Input project_automation_token is required but missing. Aborting.`
 		);
 		return;
 	}
 
-	// ID of the board used to triage block-related issues.
-	// const projectNumber = 1;
+	// Create a new Octokit instance using our the project token.
+	// eslint-disable-next-line new-cap
+	const projectOctokit = new getOctokit( projectToken );
 
+	// Get the URL of the project board, which contains useful information about the project.
+	const projectBoardLink = getInput( 'project_board' );
+	if ( ! projectBoardLink ) {
+		setFailed( 'triage-issues: No project board link provided. Cannot triage to a board.' );
+		return;
+	}
 
-		debug(
-			`is-on-board: Issue #${ number } is in project`
-		);
+	const projectRegex = /^(?:https:\/\/)?github\.com\/(?<ownerType>orgs|users)\/(?<ownerName>[^/]+)\/projects\/(?<projectNumber>\d+)/;
+	const matches = projectBoardLink.match( projectRegex );
+	if ( ! matches ) {
+		debug( `triage-issues: Invalid project board link provided. Cannot triage to a board` );
+		return {};
+	}
+	const {
+		groups: { ownerType, ownerName, projectNumber },
+	} = matches;
 
+	const projectInfo = {
+		ownerType: ownerType === 'orgs' ? 'organization' : 'user', // GitHub API requests require 'organization' or 'user'.
+		ownerName,
+		projectNumber: parseInt( projectNumber, 10 ),
+	};
 
-		const projectBoardLink = getInput( 'project_board' );
-		if ( ! projectBoardLink ) {
-			setFailed( 'Triage: No project board link provided. Cannot triage to a board' );
-			return;
-		}
+	debug(
+		`project-info: Owner type: ${ projectInfo.ownerType }, Owner name: ${ projectInfo.ownerName }, Project number: ${ projectInfo.projectNumber }`
+	);
 
-		// Let's create a new octokit instance using our own custom token.
-		// eslint-disable-next-line new-cap
-		const projectOctokit = new getOctokit( projectToken );
-
-		const projectRegex = /^(?:https:\/\/)?github\.com\/(?<ownerType>orgs|users)\/(?<ownerName>[^/]+)\/projects\/(?<projectNumber>\d+)/;
-		const matches = projectBoardLink.match( projectRegex );
-		if ( ! matches ) {
-			debug( `Triage: Invalid project board link provided. Cannot triage to a board` );
-			return {};
-		}
-
-		const {
-			groups: { ownerType, ownerName, projectNumber },
-		} = matches;
-	
-		const projectInfo = {
-			ownerType: ownerType === 'orgs' ? 'organization' : 'user', // GitHub API requests require 'organization' or 'user'.
-			ownerName,
-			projectNumber: parseInt( projectNumber, 10 ),
-		};
-
-		debug(
-			`is-on-board: Owner type: ${ projectInfo.ownerType }, owner name: ${ projectInfo.ownerName }, project number: ${ projectInfo.projectNumber }`
-		);
-
-		// First, use the GraphQL API to request the project's node ID,
-		// as well as info about the first 20 fields for that project.
-		// const projectDetails = await octokit.graphql(
-		// 	`query getProject($ownerName: String!, $projectNumber: Int!) {
-		// 		${ projectInfo.ownerType }(login: $ownerName) {
-		// 			projectV2(number: $projectNumber) {
-		// 				id
-		// 				fields(first:20) {
-		// 					nodes {
-		// 						... on ProjectV2Field {
-		// 							id
-		// 							name
-		// 						}
-		// 						... on ProjectV2SingleSelectField {
-		// 							id
-		// 							name
-		// 							options {
-		// 								id
-		// 								name
-		// 							}
-		// 						}
-		// 					}
-		// 				}
-		// 			}
-		// 		}
-		// 	}`,
-		// 	{
-		// 		ownerName: projectInfo.ownerName,
-		// 		projectNumber: projectInfo.projectNumber,
-		// 	}
-		// );
-
-		// Use the GraphQL API to request the project's details.
-		const projectDetails = await projectOctokit.graphql(
-			`query getProject($ownerName: String!, $projectNumber: Int!) {
-				organization(login: $ownerName) {
-					projectV2(number: $projectNumber) {
-						id
-						fields(first:20) {
-							nodes {
-								... on ProjectV2Field {
+	// Use the GraphQL API to request the project's details.
+	// TODO: Swap out organization, also update method name
+	const projectDetails = await projectOctokit.graphql(
+		`query getProject($ownerName: String!, $projectNumber: Int!) {
+			organization(login: $ownerName) {
+				projectV2(number: $projectNumber) {
+					id
+					fields(first:20) {
+						nodes {
+							... on ProjectV2Field {
+								id
+								name
+							}
+							... on ProjectV2SingleSelectField {
+								id
+								name
+								options {
 									id
 									name
-								}
-								... on ProjectV2SingleSelectField {
-									id
-									name
-									options {
-										id
-										name
-									}
 								}
 							}
 						}
 					}
 				}
-			}`,
-			{
-				ownerName: ownerLogin,
-				projectNumber: projectInfo.projectNumber,
 			}
-		);
-
-		debug(
-			`is-on-board: Project details: ${ projectDetails.organization?.projectV2.id }`
-		);
-
-		// Extract the project node ID.
-		const projectNodeId = projectDetails.organization?.projectV2.id;
-		if ( projectNodeId ) {
-			projectInfo.projectNodeId = projectNodeId; // Project board node ID. String.
-			debug(
-				`is-on-board: ${ projectNodeId } is the project node id`
-			);
+		}`,
+		{
+			ownerName: ownerLogin,
+			projectNumber: projectInfo.projectNumber,
 		}
+	);
 
+	// Extract the project node ID.
+	const projectNodeId = projectDetails.organization?.projectV2.id;
+	if ( projectNodeId ) {
+		projectInfo.projectNodeId = projectNodeId; // Project board node ID. String.
 		debug(
-			`is-on-board: ${ projectDetails.organization.projectV2.fields } is before the node`
+			`project-details: Project node id is ${ projectNodeId }`
 		);
+	}
 
-		// Extract the ID of the Status field.
-		const priorityField = projectDetails.organization?.projectV2.fields.nodes.find(
-			field => field.name === 'Priority'
+	debug(
+		`project-details: Project fields are ${ projectDetails.organization.projectV2.fields }`
+	);
+
+	// Extract the id of the Priority field.
+	const priorityField = projectDetails.organization?.projectV2.fields.nodes.find(
+		field => field.name === 'Priority'
+	);
+	if ( priorityField ) {
+		projectInfo.priority = priorityField; // Info about our priority column (id as well as possible values).
+		debug(
+			`priority-field: ${ priorityField } is a field in the project`
 		);
-		if ( priorityField ) {
-			projectInfo.priority = priorityField; // Info about our priority column (id as well as possible values).
-			debug(
-				`is-on-board: ${ priorityField } is a field in the project`
-			);
-		}
+	}
 
-		// const isInProject = await projectOctokit.graphql(
-		// 	`query getProjectNumber($id: ID!){
-		// 		node(id: $id) {
-		// 		... on Issue {
-		// 			projectItems(first: 10) {
-		// 			  ... on ProjectV2ItemConnection {
-		// 				nodes {
-		// 				  ... on ProjectV2Item {
-		// 					project {
-		// 					  ... on ProjectV2 {
-		// 						number
-		// 					  }
-		// 					}
-		// 				  }
-		// 				}
-		// 			  }
-		// 			}
-		// 		  }
-		// 		}
-		// 	  }`,
-		// 	{
-		// 		id: node_id
-		// 	}
-		// );
-
-
-
-		const isInProject = await projectOctokit.graphql(
-			`query getProjectNumber($id: ID!, $number: Int!){
-				node(id: $id) {
+	// Check if the issue is in the project (returns the project number)
+	// TODO: Programmaticlally get the project number
+	const isInProject = await projectOctokit.graphql(
+		`query getProjectNumber($id: ID!, $number: Int!){
+			node(id: $id) {
 				... on Issue {
 					projectV2(number: $number) {
 						id
 						number
 					}
-				  }
 				}
-			  }`,
-			{
-				id: node_id,
-				number: 11
 			}
-		);
-
-		const issueProjectDetails = await projectOctokit.graphql(
-			`query getIssueProjectDetails($id: ID!){
-				node(id: $id) {
-					... on Issue {
-						projectItems(first: 10) {
-						... on ProjectV2ItemConnection {
-							nodes {
-							content {
-							... on Issue {
-								id
-								projectItems(first: 10) {
-								nodes {
-									id
-								}
-								}
-							}
-							}
-							}
-						}
-						}
-					}
-					}
-			  }`,
-			{
-				id: node_id
-			}
-		);
-
-		const itemId = isInProject.node?.projectV2.id;
-		const itemNodeId = issueProjectDetails
-
-		debug(
-			`is-on-board: projectItemId: ${ issueProjectDetails }`
-		);
-
-		debug(
-			`is-on-board: projectItemId2: ${ issueProjectDetails.node?.projectItems }`
-		);
-
-		debug(
-			`is-on-board: projectItemId3: ${ issueProjectDetails.node?.projectItems.nodes.content.projectItems.nodes.id }`
-		);
-
-		debug(
-			`is-on-board: Project details: ${ isInProject.node?.projectV2.id }`
-		);
-		debug(
-			`is-on-board: Project details: ${ isInProject.node?.projectV2.number }`
-		);
-		debug(
-			`is-on-board: Node id: ${ node_id }`
-		);
-		const {
-			priority: {
-				id: priorityFieldId, // ID of the status field.
-				options,
-			},
-		} = projectInfo;
-
-		// const priorityNodeId = projectInfo.priority.id;
-		debug(
-			`is-on-board: Priority node id: ${ priorityFieldId }, node id: ${ node_id }, project number: ${ projectNodeId }`
-		);
-
-		const priorityText = 'Low';
-		// Find the ID of the status option that matches our PR status.
-		const priorityOptionId = options.find( option => option.name === priorityText ).id;
-		if ( ! priorityOptionId ) {
-			debug(
-				`Triage: Status ${ priorityText } does not exist as a column option in the project board.`
-			);
-			
+		}`,
+		{
+			id: node_id,
+			number: 11
 		}
-		debug(
-			`Triage: priority option id ${ priorityText }.`
-		);
+	);
 
-	// Add our PR to that project board.
+	// Get the issue item node id in the project.
+	// TODO: Find a cleaner way to do this.
+	const issueProjectDetails = await projectOctokit.graphql(
+		`query getIssueProjectDetails($id: ID!){
+			node(id: $id) {
+				... on Issue {
+					projectItems(first: 10) {
+					... on ProjectV2ItemConnection {
+						nodes {
+						content {
+						... on Issue {
+							id
+							projectItems(first: 10) {
+							nodes {
+								id
+							}
+							}
+						}
+						}
+						}
+					}
+					}
+				}
+				}
+			}`,
+		{
+			id: node_id
+		}
+	);
+
+	debug(
+		`is-in-project: Project node is ${ isInProject.node?.projectV2.id }`
+	);
+	debug(
+		`is-in-project: Project number is ${ isInProject.node?.projectV2.number }`
+	);
+
+	// TODO: Figure out how to access itemNodeId
+	const itemId = isInProject.node?.projectV2.id;
+	const itemNodeId = issueProjectDetails
+
+	debug(
+		`get-issue-project-details: projectItemId: ${ issueProjectDetails }`
+	);
+	debug(
+		`get-issue-project-details: projectItemId2: ${ issueProjectDetails.node?.projectItems }`
+	);
+
+	// Prepare info about the priority field.
+	// TODO: Change priority text based on label.
+	const {
+		priority: {
+			id: priorityFieldId, // ID of the status field.
+			options,
+		},
+	} = projectInfo;
+	const priorityText = 'Low';
+
+	debug(
+		`priority-field: Priority node id: ${ priorityFieldId }, Node id: ${ node_id }, Project number: ${ projectNodeId }`
+	);
+
+	// Find the ID of the priority option that matches the priority label.
+	const priorityOptionId = options.find( option => option.name === priorityText ).id;
+	if ( ! priorityOptionId ) {
+		debug(
+			`priority-field: Priority ${ priorityText } does not exist as a column option in the project board.`
+		);
+		
+	}
+
+	// Update the priority field of the issue on the project board.
+	// TODO: Get the itemId programmatically.
 	const projectItemDetails = await projectOctokit.graphql(
 		`mutation ( $input: UpdateProjectV2ItemFieldValueInput! ) {
 			set_status: updateProjectV2ItemFieldValue( input: $input ) {
@@ -459,16 +387,14 @@ async function triageIssues( payload, octokit ) {
 		}
 	);
 
-	debug( `Finished getting stuff.` );
+	debug( `Project field should be updated.` );
 
-	const projectItemId = projectItemDetails.updateProjectV2ItemFieldValue.projectV2Item.id;
-	if ( ! projectItemId ) {
-		debug( `Triage: Failed to add PR to project board.` );
-		return '';
-	}
-
-
-
+	// TODO: Find a way to check if it was successful.
+	// const projectItemId = projectItemDetails.updateProjectV2ItemFieldValue.projectV2Item.id;
+	// if ( ! projectItemId ) {
+	// 	debug( `Triage: Failed to add PR to project board.` );
+	// 	return '';
+	// }
 
 	// Find Priority.
 	const priorityLabels = await hasPriorityLabels(
