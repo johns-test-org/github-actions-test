@@ -421,7 +421,7 @@ async function triageIssues( payload, octokit ) {
 	const priorityText = 'Low';
 
 	debug(
-		`priority-field: Priority node id: ${ priorityFieldId }, Node id: ${ node_id }, Project number: ${ projectNodeId }`
+		`priority-field: Priority node id: ${ priorityFieldId }, Node id: ${ node_id }, Project number: ${ projectInfo.projectNodeId }`
 	);
 
 	// Find the ID of the priority option that matches the priority label.
@@ -433,7 +433,7 @@ async function triageIssues( payload, octokit ) {
 		
 	}
 
-	const isUpdated = await updateProjectField(projectOctokit, priorityFieldId, itemNodeId, projectNodeId, priorityOptionId);
+	const isUpdated = await updateProjectField(projectOctokit, priorityFieldId, itemNodeId, projectInfo.projectNodeId, priorityOptionId);
 
 	debug( `Project has been updated: ${ isUpdated }` );
 
