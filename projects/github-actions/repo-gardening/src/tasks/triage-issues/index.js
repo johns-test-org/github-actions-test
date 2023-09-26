@@ -281,7 +281,7 @@ async function getProjectDetails( octokit, projectBoardLink ) {
 
 	// Use the GraphQL API to request the project's details.
 	// TODO: Swap out organization, also update method name
-	const projectDetails = await projectOctokit.graphql(
+	const projectDetails = await octokit.graphql(
 		`query getProject($ownerName: String!, $projectNumber: Int!) {
 			organization(login: $ownerName) {
 				projectV2(number: $projectNumber) {
