@@ -172,6 +172,10 @@ function findPriority( body ) {
  * @returns {Promise<boolean>} Promise resolving to boolean.
  */
 async function updateProjectField( octokit, fieldId, itemId, projectId, optionId) {
+
+	debug(
+		`update-project-field: itemId: ${ itemId }`
+	);
 	// TODO: Get the itemId programmatically.
 	const projectItemDetails = await octokit.graphql(
 		`mutation ( $input: UpdateProjectV2ItemFieldValueInput! ) {
@@ -387,6 +391,10 @@ async function triageIssues( payload, octokit ) {
 	);
 
 	const itemNodeId = getItemNodeId(projectOctokit, node_id);
+
+	debug(
+		`priority-field: Item node id: ${ itemNodeId }`
+	);
 
 	// Prepare info about the priority field.
 	// TODO: Change priority text based on label.
