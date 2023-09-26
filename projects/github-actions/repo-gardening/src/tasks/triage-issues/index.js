@@ -164,12 +164,11 @@ function findPriority( body ) {
 /**
  * Update a single select field of an issue on the project board.
  *
- * @param {GitHub} octokit    - Initialized Octokit REST client with project permissions.
- * @param {string} fieldId    - Node id of the filed to be updated.
- * @param {string} itemId     - Node id of the item (issue) to be updated.
- * @param {string} projectId  - Node id of the project.
- * @param {string} optionId   - Action that triggered the event ('opened', 'reopened', 'labeled').
- * @param {object} eventLabel - Label that was added to the issue.
+ * @param {GitHub} octokit   - Initialized Octokit REST client with project permissions.
+ * @param {string} fieldId   - Node id of the filed to be updated.
+ * @param {string} itemId    - Node id of the item (issue) to be updated.
+ * @param {string} projectId - Node id of the project.
+ * @param {string} optionId  - Action that triggered the event ('opened', 'reopened', 'labeled').
  * @returns {Promise<boolean>} Promise resolving to boolean.
  */
 async function updateProjectField( octokit, fieldId, itemId, projectId, optionId) {
@@ -196,6 +195,56 @@ async function updateProjectField( octokit, fieldId, itemId, projectId, optionId
 
 	// TODO: Check if the field was updated and return true.
 	return true;
+}
+
+/**
+ * Gets the item node id, which is needed to updated project fields for an issue.
+ *
+ * @param {GitHub} octokit    - Initialized Octokit REST client with project permissions.
+ * @param {string} nodeId     - Node id of the issue to be updated.
+ * @returns {string} Item node id of the issue.
+ */
+async function getItemNodeId( octokit, nodeId) {
+	// TODO: Find a cleaner way to do this.
+	const issueProjectDetails = await octokit.graphql(
+		`query getIssueProjectDetails($id: ID!){
+			node(id: $id) {
+				... on Issue {
+					projectItems(first: 10) {
+						... on ProjectV2ItemConnection {
+							nodes {
+								content {
+									... on Issue {
+										id
+										projectItems(first: 10) {
+											nodes {
+												id
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}`,
+		{
+			id: nodeId
+		}
+	);
+
+	// TODO: Figure out how to access itemNodeId
+	const itemNodeId = 'PVTI_lADOCGvWfc4AUwHEzgI4tDo';
+
+	debug(
+		`get-issue-project-details: projectItemId: ${ issueProjectDetails }`
+	);
+	debug(
+		`get-issue-project-details: projectItemId2: ${ issueProjectDetails.node?.projectItems }`
+	);
+
+	return itemNodeId;
 }
 
 /**
@@ -329,36 +378,7 @@ async function triageIssues( payload, octokit ) {
 			number: 11
 		}
 	);
-
-	// Get the issue item node id in the project.
-	// TODO: Find a cleaner way to do this.
-	const issueProjectDetails = await projectOctokit.graphql(
-		`query getIssueProjectDetails($id: ID!){
-			node(id: $id) {
-				... on Issue {
-					projectItems(first: 10) {
-					... on ProjectV2ItemConnection {
-						nodes {
-						content {
-						... on Issue {
-							id
-							projectItems(first: 10) {
-							nodes {
-								id
-							}
-							}
-						}
-						}
-						}
-					}
-					}
-				}
-				}
-			}`,
-		{
-			id: node_id
-		}
-	);
+	const itemId = isInProject.node?.projectV2.id;
 
 	debug(
 		`is-in-project: Project node is ${ isInProject.node?.projectV2.id }`
@@ -367,16 +387,7 @@ async function triageIssues( payload, octokit ) {
 		`is-in-project: Project number is ${ isInProject.node?.projectV2.number }`
 	);
 
-	// TODO: Figure out how to access itemNodeId
-	const itemId = isInProject.node?.projectV2.id;
-	const itemNodeId = 'PVTI_lADOCGvWfc4AUwHEzgI4tDo';
-
-	debug(
-		`get-issue-project-details: projectItemId: ${ issueProjectDetails }`
-	);
-	debug(
-		`get-issue-project-details: projectItemId2: ${ issueProjectDetails.node?.projectItems }`
-	);
+	const itemNodeId = getItemNodeId(projectOctokit, node_id);
 
 	// Prepare info about the priority field.
 	// TODO: Change priority text based on label.
