@@ -235,7 +235,6 @@ async function getItemNodeId( octokit, nodeId) {
 	);
 
 	// TODO: Figure out how to access itemNodeId
-	const itemNodeId = 'PVTI_lADOCGvWfc4AUwHEzgI4tDo';
 
 	debug(
 		`get-issue-project-details: projectItemId: ${ issueProjectDetails }`
@@ -244,7 +243,7 @@ async function getItemNodeId( octokit, nodeId) {
 		`get-issue-project-details: projectItemId2: ${ issueProjectDetails.node?.projectItems }`
 	);
 
-	return itemNodeId;
+	return 'PVTI_lADOCGvWfc4AUwHEzgI4tDo';
 }
 
 /**
