@@ -161,6 +161,42 @@ function findPriority( body ) {
 	debug( `triage-issues: No priority indicators found.` );
 	return 'TBD';
 }
+/**
+ * Update a single select field of an issue on the project board.
+ *
+ * @param {GitHub} octokit    - Initialized Octokit REST client with project permissions.
+ * @param {string} fieldId    - Node id of the filed to be updated.
+ * @param {string} itemId     - Node id of the item (issue) to be updated.
+ * @param {string} projectId  - Node id of the project.
+ * @param {string} optionId   - Action that triggered the event ('opened', 'reopened', 'labeled').
+ * @param {object} eventLabel - Label that was added to the issue.
+ * @returns {Promise<boolean>} Promise resolving to boolean.
+ */
+async function updateProjectField( octokit, fieldId, itemId, projectId, optionId) {
+	// TODO: Get the itemId programmatically.
+	const projectItemDetails = await octokit.graphql(
+		`mutation ( $input: UpdateProjectV2ItemFieldValueInput! ) {
+			set_status: updateProjectV2ItemFieldValue( input: $input ) {
+				projectV2Item {
+					id
+				}
+			}
+		}`,
+		{
+			input: {
+				fieldId: fieldId,
+				itemId: itemId,
+				projectId: projectId,
+				value: {
+					singleSelectOptionId: optionId,
+				},
+			},
+		}
+	);
+
+	// TODO: Check if the field was updated and return true.
+	return true;
+}
 
 /**
  * Automatically add labels to issues, and send Slack notifications.
@@ -333,7 +369,7 @@ async function triageIssues( payload, octokit ) {
 
 	// TODO: Figure out how to access itemNodeId
 	const itemId = isInProject.node?.projectV2.id;
-	const itemNodeId = issueProjectDetails
+	const itemNodeId = 'PVTI_lADOCGvWfc4AUwHEzgI4tDo';
 
 	debug(
 		`get-issue-project-details: projectItemId: ${ issueProjectDetails }`
@@ -365,29 +401,9 @@ async function triageIssues( payload, octokit ) {
 		
 	}
 
-	// Update the priority field of the issue on the project board.
-	// TODO: Get the itemId programmatically.
-	const projectItemDetails = await projectOctokit.graphql(
-		`mutation ( $input: UpdateProjectV2ItemFieldValueInput! ) {
-			set_status: updateProjectV2ItemFieldValue( input: $input ) {
-				projectV2Item {
-					id
-				}
-			}
-		}`,
-		{
-			input: {
-				fieldId: priorityFieldId,
-				itemId: 'PVTI_lADOCGvWfc4AUwHEzgI4tDo',
-				projectId: projectNodeId,
-				value: {
-					singleSelectOptionId: priorityOptionId,
-				},
-			},
-		}
-	);
+	const isUpdated = await updateProjectField(projectOctokit, priorityFieldId, itemNodeId, projectNodeId, priorityOptionId);
 
-	debug( `Project field should be updated.` );
+	debug( `Project has been updated: ${ isUpdated }` );
 
 	// TODO: Find a way to check if it was successful.
 	// const projectItemId = projectItemDetails.updateProjectV2ItemFieldValue.projectV2Item.id;
