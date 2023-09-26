@@ -251,41 +251,13 @@ async function getItemNodeId( octokit, nodeId) {
 }
 
 /**
- * Automatically add labels to issues, and send Slack notifications.
+ * Get Information about a project board.
  *
- * This task can send 2 different types of Slack notifications:
- * - If an issue is determined as High or Blocker priority,
- * - If no priority is determined.
- *
- * @param {WebhookPayloadIssue} payload - Issue event payload.
- * @param {GitHub}              octokit - Initialized Octokit REST client.
+ * @param {GitHub} octokit          - Initialized Octokit REST client with project permissions.
+ * @param {string} projectBoardLink - The link to the project board.
+ * @returns {Promise<Object>} - Project board information.
  */
-async function triageIssues( payload, octokit ) {
-	const { action, issue, label = {}, repository } = payload;
-	const { number, body, state, node_id } = issue;
-	const { owner, name, full_name } = repository;
-	const ownerLogin = owner.login;
-
-	// Get the project automation token, which has special permissions to update GitHub projects.
-	// TODO: Have separate paths for regular token and project automation token.
-	const projectToken = getInput( 'project_automation_token' );
-	if ( ! projectToken ) {
-		setFailed(
-			`triage-issues: Input project_automation_token is required but missing. Aborting.`
-		);
-		return;
-	}
-
-	// Create a new Octokit instance using our the project token.
-	// eslint-disable-next-line new-cap
-	const projectOctokit = new getOctokit( projectToken );
-
-	// Get the URL of the project board, which contains useful information about the project.
-	const projectBoardLink = getInput( 'project_board' );
-	if ( ! projectBoardLink ) {
-		setFailed( 'triage-issues: No project board link provided. Cannot triage to a board.' );
-		return;
-	}
+async function getProjectDetails( octokit, projectBoardLink ) {
 
 	const projectRegex = /^(?:https:\/\/)?github\.com\/(?<ownerType>orgs|users)\/(?<ownerName>[^/]+)\/projects\/(?<projectNumber>\d+)/;
 	const matches = projectBoardLink.match( projectRegex );
@@ -362,6 +334,48 @@ async function triageIssues( payload, octokit ) {
 			`priority-field: ${ priorityField } is a field in the project`
 		);
 	}
+
+	return projectInfo;
+}
+
+/**
+ * Automatically add labels to issues, and send Slack notifications.
+ *
+ * This task can send 2 different types of Slack notifications:
+ * - If an issue is determined as High or Blocker priority,
+ * - If no priority is determined.
+ *
+ * @param {WebhookPayloadIssue} payload - Issue event payload.
+ * @param {GitHub}              octokit - Initialized Octokit REST client.
+ */
+async function triageIssues( payload, octokit ) {
+	const { action, issue, label = {}, repository } = payload;
+	const { number, body, state, node_id } = issue;
+	const { owner, name, full_name } = repository;
+	const ownerLogin = owner.login;
+
+	// Get the project automation token, which has special permissions to update GitHub projects.
+	// TODO: Have separate paths for regular token and project automation token.
+	const projectToken = getInput( 'project_automation_token' );
+	if ( ! projectToken ) {
+		setFailed(
+			`triage-issues: Input project_automation_token is required but missing. Aborting.`
+		);
+		return;
+	}
+
+	// Create a new Octokit instance using our the project token.
+	// eslint-disable-next-line new-cap
+	const projectOctokit = new getOctokit( projectToken );
+
+	// Get the URL of the project board, which contains useful information about the project.
+	const projectBoardLink = getInput( 'project_board' );
+	if ( ! projectBoardLink ) {
+		setFailed( 'triage-issues: No project board link provided. Cannot triage to a board.' );
+		return;
+	}
+
+	const projectInfo = await getProjectDetails(projectOctokit, projectBoardLink)
 
 	// Check if the issue is in the project (returns the project number)
 	// TODO: Programmaticlally get the project number
