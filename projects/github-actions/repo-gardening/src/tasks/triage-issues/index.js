@@ -206,7 +206,7 @@ async function updateProjectField( octokit, fieldId, itemId, projectId, optionId
  *
  * @param {GitHub} octokit    - Initialized Octokit REST client with project permissions.
  * @param {string} nodeId     - Node id of the issue to be updated.
- * @returns {string} Item node id of the issue.
+ * @returns {Promise<string>} Promise resolving to a string.
  */
 async function getItemNodeId( octokit, nodeId) {
 	// TODO: Find a cleaner way to do this.
@@ -390,7 +390,7 @@ async function triageIssues( payload, octokit ) {
 		`is-in-project: Project number is ${ isInProject.node?.projectV2.number }`
 	);
 
-	const itemNodeId = getItemNodeId(projectOctokit, node_id);
+	const itemNodeId = await getItemNodeId(projectOctokit, node_id);
 
 	debug(
 		`priority-field: Item node id: ${ itemNodeId }`
