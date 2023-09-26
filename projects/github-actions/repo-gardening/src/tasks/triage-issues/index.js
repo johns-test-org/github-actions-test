@@ -306,7 +306,7 @@ async function getProjectDetails( octokit, projectBoardLink ) {
 			}
 		}`,
 		{
-			ownerName: ownerLogin,
+			ownerName: projectInfo.ownerName,
 			projectNumber: projectInfo.projectNumber,
 		}
 	);
