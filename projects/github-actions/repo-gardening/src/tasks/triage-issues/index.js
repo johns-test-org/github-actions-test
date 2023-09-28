@@ -346,7 +346,7 @@ async function getProjectDetails( octokit, projectBoardLink ) {
  * @param {string} projectNumber - The project's number (e.g. 391).
  * @returns {Promise<boolean>} Promise resolving to a boolean.
  */
-async function isInProject(octokit, nodeId, projectNumber){
+async function isIssueInProject(octokit, nodeId, projectNumber){
 		// Check if the issue is in the project (returns the project number)
 	// TODO: Programmaticlally get the project number
 	const isInProject = await octokit.graphql(
@@ -415,7 +415,7 @@ async function triageIssues( payload, octokit ) {
 
 	const projectInfo = await getProjectDetails(projectOctokit, projectBoardLink);
 
-	const isInProject = await isInProject(projectOctokit, node_id, '11');
+	const isInProject = await isIssueInProject(projectOctokit, node_id, '11');
 
 	const itemNodeId = await getItemNodeId(projectOctokit, node_id);
 
