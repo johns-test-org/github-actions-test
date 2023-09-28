@@ -339,6 +339,44 @@ async function getProjectDetails( octokit, projectBoardLink ) {
 }
 
 /**
+ * Gets the item node id, which is needed to updated project fields for an issue.
+ *
+ * @param {GitHub} octokit       - Initialized Octokit REST client with project permissions.
+ * @param {string} nodeId        - Node id of the issue to be updated.
+ * @param {string} projectNumber - The project's number (e.g. 391).
+ * @returns {Promise<boolean>} Promise resolving to a boolean.
+ */
+async function isInProject(octokit, nodeId, projectNumber){
+		// Check if the issue is in the project (returns the project number)
+	// TODO: Programmaticlally get the project number
+	const isInProject = await octokit.graphql(
+		`query getProjectNumber($id: ID!, $number: Int!){
+			node(id: $id) {
+				... on Issue {
+					projectV2(number: $number) {
+						id
+						number
+					}
+				}
+			}
+		}`,
+		{
+			id: nodeId,
+			number: projectNumber
+		}
+	);
+
+	debug(
+		`is-in-project: Project node id is ${ isInProject.node?.projectV2.id }`
+	);
+	debug(
+		`is-in-project: Project number is ${ isInProject.node?.projectV2.number }`
+	);
+
+	return true
+}
+
+/**
  * Automatically add labels to issues, and send Slack notifications.
  *
  * This task can send 2 different types of Slack notifications:
@@ -375,34 +413,9 @@ async function triageIssues( payload, octokit ) {
 		return;
 	}
 
-	const projectInfo = await getProjectDetails(projectOctokit, projectBoardLink)
+	const projectInfo = await getProjectDetails(projectOctokit, projectBoardLink);
 
-	// Check if the issue is in the project (returns the project number)
-	// TODO: Programmaticlally get the project number
-	const isInProject = await projectOctokit.graphql(
-		`query getProjectNumber($id: ID!, $number: Int!){
-			node(id: $id) {
-				... on Issue {
-					projectV2(number: $number) {
-						id
-						number
-					}
-				}
-			}
-		}`,
-		{
-			id: node_id,
-			number: 11
-		}
-	);
-	const itemId = isInProject.node?.projectV2.id;
-
-	debug(
-		`is-in-project: Project node is ${ isInProject.node?.projectV2.id }`
-	);
-	debug(
-		`is-in-project: Project number is ${ isInProject.node?.projectV2.number }`
-	);
+	const isInProject = await isInProject(projectOctokit, node_id, '11');
 
 	const itemNodeId = await getItemNodeId(projectOctokit, node_id);
 
