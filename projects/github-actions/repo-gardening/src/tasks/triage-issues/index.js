@@ -415,7 +415,7 @@ async function triageIssues( payload, octokit ) {
 
 	const projectInfo = await getProjectDetails(projectOctokit, projectBoardLink);
 
-	const isInProject = await isIssueInProject(projectOctokit, node_id, 11);
+	const isInProject = await isIssueInProject(projectOctokit, node_id, '11');
 
 	const itemNodeId = await getItemNodeId(projectOctokit, node_id);
 
